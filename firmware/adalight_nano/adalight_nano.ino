@@ -22,6 +22,7 @@
 #define COLOR_ORDER GRB        // WS2812B is GRB; FastLED remaps, host sends RGB
 #define BAUD       500000      // MUST match config.toml [serial] baud
 #define BRIGHTNESS 255         // global cap; keep 255, dim via the app instead
+#define TIMEOUT_MS 60000UL     // clear strip if no full frame for this long
 
 CRGB leds[NUM_LEDS];
 
@@ -32,6 +33,9 @@ uint16_t bytesExpected, bytesRead;
 uint8_t rgb[3];
 uint8_t rgbIdx;
 uint16_t ledIdx;
+
+unsigned long lastFrameMs = 0;   // timestamp of last complete frame
+bool blanked = false;            // strip already cleared by timeout?
 
 void selfTest() {
   const CRGB seq[3] = { CRGB::Red, CRGB::Green, CRGB::Blue };
@@ -52,6 +56,7 @@ void setup() {
   selfTest();               // visible proof the strip/power/pin are alive
 
   Serial.begin(BAUD);
+  lastFrameMs = millis();
 }
 
 void loop() {
@@ -83,9 +88,18 @@ void loop() {
         }
         if (++bytesRead >= bytesExpected) {
           FastLED.show();
+          lastFrameMs = millis();
+          blanked = false;
           state = WAIT_A;
         }
         break;
     }
+  }
+
+  // Watchdog: if no complete frame arrived within TIMEOUT_MS (host stopped,
+  // PC shut down, cable pulled), blank the strip so it doesn't stay lit.
+  if (!blanked && (millis() - lastFrameMs) > TIMEOUT_MS) {
+    FastLED.clear(true);
+    blanked = true;
   }
 }
