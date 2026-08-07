@@ -1,0 +1,59 @@
+# adalight-cosmic configuration
+# Copy to ~/.config/adalight-cosmic/config.toml or pass with --config
+
+[serial]
+device = "/dev/ttyUSB0"
+# Must match the baud rate in your Arduino Adalight sketch.
+# The bundled firmware/adalight_nano sketch uses 500000.
+baud = 500000
+# Physical LED order. Adalight/FastLED sketches usually handle GRB internally,
+# so keep "RGB" unless colors come out swapped.
+color_order = "RGB"
+
+[capture]
+# Monitor to capture, by wl_output name. Yours: "DP-1" or "HDMI-A-1".
+output = "DP-1"
+# Target frames per second (also bounded by serial baud).
+fps = 60
+# Depth of the sampled edge band, as a fraction of the screen side (0.0..0.5).
+band_depth = 0.08
+# Pixel subsampling step inside each zone (>=1). Higher = less CPU on 4K.
+subsample = 4
+
+[color]
+gamma = 2.2
+brightness = 1.0
+saturation = 1.1
+# Temporal smoothing (EMA). 0.0 = instant/no smoothing, ->1.0 = very sticky.
+smoothing = 0.4
+# Per-channel cutoff (0..255) to kill dark-noise flicker.
+black_level = 6
+# Per-channel multipliers [R, G, B] applied in linear space (white balance).
+white_balance = [1.0, 0.95, 0.90]
+
+# --- LED chain geometry ---------------------------------------------------
+# Segments are listed in the PHYSICAL order of the chain, starting from the
+# first LED (index 0). Each segment covers one screen edge.
+#
+#   edge:      "top" | "bottom" | "left" | "right"
+#   count:     number of LEDs on this edge
+#   direction: horizontal edges -> "ltr" | "rtl"
+#              vertical   edges -> "ttb" | "btt"
+#
+# Example below: chain starts at bottom-right, goes left along the bottom,
+# up the left side, right along the top, down the right side.
+
+[[leds.segment]]
+edge = "left"
+count = 20
+direction = "btt"
+
+[[leds.segment]]
+edge = "top"
+count = 37
+direction = "ltr"
+
+[[leds.segment]]
+edge = "right"
+count = 20
+direction = "ttb"

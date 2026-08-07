@@ -1,0 +1,13 @@
+[Unit]
+Description=adalight-cosmic ambient backlight
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/adalight-cosmic --config %h/.config/adalight-cosmic/config.toml
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

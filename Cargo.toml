@@ -1,0 +1,26 @@
+[package]
+name = "adalight-cosmic"
+version = "0.1.0"
+edition = "2021"
+description = "Ambient backlight (Adalight) driven by Wayland screen capture on COSMIC/wlroots-ext"
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+# default-features disabled to drop the libudev-sys dependency (only needed for
+# port *enumeration*, which we don't use — we open by explicit device path).
+serialport = { version = "4", default-features = false }
+memmap2 = "0.9"
+rustix = { version = "0.38", features = ["fs", "shm", "mm"] }
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["staging", "client"] }
+log = "0.4"
+env_logger = "0.11"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
