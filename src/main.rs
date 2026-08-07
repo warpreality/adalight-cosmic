@@ -16,7 +16,10 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 #[derive(Parser, Debug)]
-#[command(name = "adalight-cosmic", about = "Wayland ambient backlight for COSMIC")]
+#[command(
+    name = "adalight-cosmic",
+    about = "Wayland ambient backlight for COSMIC"
+)]
 struct Cli {
     /// Path to config.toml
     #[arg(short, long)]
@@ -46,8 +49,7 @@ fn default_config_path() -> PathBuf {
 }
 
 fn main() -> Result<()> {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let cli = Cli::parse();
     let cfg_path = cli.config.clone().unwrap_or_else(default_config_path);

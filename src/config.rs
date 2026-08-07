@@ -143,14 +143,12 @@ impl Config {
             (0.0..0.5).contains(&self.capture.band_depth),
             "capture.band_depth must be in [0.0, 0.5)"
         );
-        anyhow::ensure!(self.capture.subsample >= 1, "capture.subsample must be >= 1");
+        anyhow::ensure!(
+            self.capture.subsample >= 1,
+            "capture.subsample must be >= 1"
+        );
         anyhow::ensure!(self.capture.fps >= 1, "capture.fps must be >= 1");
-        for (edge, dir) in self
-            .leds
-            .segment
-            .iter()
-            .map(|s| (s.edge, s.direction))
-        {
+        for (edge, dir) in self.leds.segment.iter().map(|s| (s.edge, s.direction)) {
             let ok = match edge {
                 Edge::Top | Edge::Bottom => {
                     matches!(dir, Direction::Ltr | Direction::Rtl)

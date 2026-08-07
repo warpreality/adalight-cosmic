@@ -14,8 +14,8 @@
 //! your exact wayland-protocols version, the interface paths under
 //! `wayland_protocols::ext::*` are the thing to check first.
 
-use crate::color::PixelFormat;
 use crate::capture::{Frame, ScreenCapturer};
+use crate::color::PixelFormat;
 use anyhow::{anyhow, bail, Context, Result};
 use memmap2::MmapMut;
 use std::os::fd::AsFd;
@@ -131,12 +131,16 @@ impl ExtImageCapturer {
             .shm
             .clone()
             .ok_or_else(|| anyhow!("compositor has no wl_shm"))?;
-        let source_mgr = state.globals.source_mgr.clone().ok_or_else(|| {
-            anyhow!("no ext_output_image_capture_source_manager_v1")
-        })?;
-        let capture_mgr = state.globals.capture_mgr.clone().ok_or_else(|| {
-            anyhow!("no ext_image_copy_capture_manager_v1")
-        })?;
+        let source_mgr = state
+            .globals
+            .source_mgr
+            .clone()
+            .ok_or_else(|| anyhow!("no ext_output_image_capture_source_manager_v1"))?;
+        let capture_mgr = state
+            .globals
+            .capture_mgr
+            .clone()
+            .ok_or_else(|| anyhow!("no ext_image_copy_capture_manager_v1"))?;
 
         // Find the requested output.
         let output = state
@@ -158,8 +162,7 @@ impl ExtImageCapturer {
             })?;
 
         // Create capture source from the output.
-        let source: ExtImageCaptureSourceV1 =
-            source_mgr.create_source(&output, &qh, ());
+        let source: ExtImageCaptureSourceV1 = source_mgr.create_source(&output, &qh, ());
 
         // Create the capture session.
         let opts = if paint_cursors {
@@ -294,8 +297,7 @@ fn memfd_mmap(size: usize) -> Result<ShmMem> {
     use std::os::fd::FromRawFd;
     use std::os::fd::IntoRawFd;
 
-    let ofd = memfd_create("adalight-cosmic", MemfdFlags::CLOEXEC)
-        .context("memfd_create")?;
+    let ofd = memfd_create("adalight-cosmic", MemfdFlags::CLOEXEC).context("memfd_create")?;
     // SAFETY: ofd is a freshly created, owned fd.
     let file: File = unsafe { File::from_raw_fd(ofd.into_raw_fd()) };
     file.set_len(size as u64).context("set_len on shm")?;
@@ -328,37 +330,29 @@ impl Dispatch<WlRegistry, ()> for State {
                         Some(registry.bind::<WlShm, _, _>(name, version.min(1), qh, ()));
                 }
                 "wl_output" => {
-                    let out = registry.bind::<WlOutput, _, _>(
-                        name,
-                        version.min(4),
-                        qh,
-                        (),
-                    );
+                    let out = registry.bind::<WlOutput, _, _>(name, version.min(4), qh, ());
                     state.outputs.push(OutputInfo {
                         output: Some(out),
                         name: None,
                     });
                 }
                 "ext_output_image_capture_source_manager_v1" => {
-                    state.globals.source_mgr = Some(
-                        registry
-                            .bind::<ExtOutputImageCaptureSourceManagerV1, _, _>(
-                                name,
-                                version.min(1),
-                                qh,
-                                (),
-                            ),
-                    );
-                }
-                "ext_image_copy_capture_manager_v1" => {
-                    state.globals.capture_mgr = Some(
-                        registry.bind::<ExtImageCopyCaptureManagerV1, _, _>(
+                    state.globals.source_mgr =
+                        Some(registry.bind::<ExtOutputImageCaptureSourceManagerV1, _, _>(
                             name,
                             version.min(1),
                             qh,
                             (),
-                        ),
-                    );
+                        ));
+                }
+                "ext_image_copy_capture_manager_v1" => {
+                    state.globals.capture_mgr =
+                        Some(registry.bind::<ExtImageCopyCaptureManagerV1, _, _>(
+                            name,
+                            version.min(1),
+                            qh,
+                            (),
+                        ));
                 }
                 _ => {}
             }
@@ -389,27 +383,75 @@ impl Dispatch<WlOutput, ()> for State {
 }
 
 impl Dispatch<WlShm, ()> for State {
-    fn event(_: &mut Self, _: &WlShm, _: <WlShm as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &WlShm,
+        _: <WlShm as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<WlShmPool, ()> for State {
-    fn event(_: &mut Self, _: &WlShmPool, _: <WlShmPool as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &WlShmPool,
+        _: <WlShmPool as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<WlBuffer, ()> for State {
-    fn event(_: &mut Self, _: &WlBuffer, _: <WlBuffer as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &WlBuffer,
+        _: <WlBuffer as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtOutputImageCaptureSourceManagerV1, ()> for State {
-    fn event(_: &mut Self, _: &ExtOutputImageCaptureSourceManagerV1, _: <ExtOutputImageCaptureSourceManagerV1 as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &ExtOutputImageCaptureSourceManagerV1,
+        _: <ExtOutputImageCaptureSourceManagerV1 as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtImageCaptureSourceV1, ()> for State {
-    fn event(_: &mut Self, _: &ExtImageCaptureSourceV1, _: <ExtImageCaptureSourceV1 as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &ExtImageCaptureSourceV1,
+        _: <ExtImageCaptureSourceV1 as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtImageCopyCaptureManagerV1, ()> for State {
-    fn event(_: &mut Self, _: &ExtImageCopyCaptureManagerV1, _: <ExtImageCopyCaptureManagerV1 as Proxy>::Event, _: &(), _: &Connection, _: &QueueHandle<Self>) {}
+    fn event(
+        _: &mut Self,
+        _: &ExtImageCopyCaptureManagerV1,
+        _: <ExtImageCopyCaptureManagerV1 as Proxy>::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+    }
 }
 
 impl Dispatch<ExtImageCopyCaptureSessionV1, ()> for State {
@@ -427,14 +469,12 @@ impl Dispatch<ExtImageCopyCaptureSessionV1, ()> for State {
                 state.buf_width = width;
                 state.buf_height = height;
             }
-            Event::ShmFormat { format } => {
-                if let wayland_client::WEnum::Value(f) = format {
-                    // Prefer XRGB/XBGR if offered; keep first supported otherwise.
-                    if state.shm_format.is_none() || map_format(f).is_some() {
-                        if map_format(f).is_some() {
-                            state.shm_format = Some(f);
-                        }
-                    }
+            Event::ShmFormat {
+                format: wayland_client::WEnum::Value(f),
+            } => {
+                // Keep the first format we actually support.
+                if state.shm_format.is_none() && map_format(f).is_some() {
+                    state.shm_format = Some(f);
                 }
             }
             Event::Done => {
