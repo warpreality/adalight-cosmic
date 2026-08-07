@@ -37,12 +37,20 @@ uint16_t ledIdx;
 unsigned long lastFrameMs = 0;   // timestamp of last complete frame
 bool blanked = false;            // strip already cleared by timeout?
 
+// Smooth startup: each of R,G,B gently fades in then out. Still proves every
+// channel + all LEDs work, but looks like a soft breath instead of a hard blink.
 void selfTest() {
   const CRGB seq[3] = { CRGB::Red, CRGB::Green, CRGB::Blue };
   for (uint8_t s = 0; s < 3; s++) {
-    fill_solid(leds, NUM_LEDS, seq[s]);
-    FastLED.show();
-    delay(400);
+    // p sweeps 0..255; cubicwave8 gives an eased 0->255->0 hump.
+    for (uint16_t p = 0; p < 256; p += 4) {
+      uint8_t level = cubicwave8((uint8_t)p);   // 0 at ends, 255 at middle
+      CRGB c = seq[s];
+      c.nscale8(level);                          // scale color by eased level
+      fill_solid(leds, NUM_LEDS, c);
+      FastLED.show();
+      delay(5);
+    }
   }
   FastLED.clear(true);
 }
