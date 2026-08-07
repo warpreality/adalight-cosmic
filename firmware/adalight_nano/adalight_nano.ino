@@ -97,9 +97,22 @@ void loop() {
   }
 
   // Watchdog: if no complete frame arrived within TIMEOUT_MS (host stopped,
-  // PC shut down, cable pulled), blank the strip so it doesn't stay lit.
+  // PC shut down, cable pulled), fade the strip out smoothly.
   if (!blanked && (millis() - lastFrameMs) > TIMEOUT_MS) {
-    FastLED.clear(true);
+    fadeOut();
     blanked = true;
   }
+}
+
+// Smoothly dim the current strip contents to black over ~1 second.
+void fadeOut() {
+  // 64 steps * ~16ms = ~1s. fadeToBlackBy scales all LEDs toward 0.
+  for (uint8_t i = 0; i < 64; i++) {
+    fadeToBlackBy(leds, NUM_LEDS, 12);   // ~5% off per step
+    FastLED.show();
+    delay(16);
+    // Bail out early if a new frame starts arriving during the fade.
+    if (Serial.available() > 0) return;
+  }
+  FastLED.clear(true);
 }
