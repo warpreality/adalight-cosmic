@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Package artifacts
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          PKG="adalight-cosmic-${VERSION}-linux-x86_64"
+          mkdir -p "dist/${PKG}"
+          cp target/release/adalight-cosmic "dist/${PKG}/"
+          cp config.example.toml README.md "dist/${PKG}/"
+          cp -r firmware "dist/${PKG}/"
+          cp -r systemd "dist/${PKG}/"
+          tar -C dist -czf "dist/${PKG}.tar.gz" "${PKG}"
+          # standalone binary (distinct name so it doesn't collide with the dir)
+          cp target/release/adalight-cosmic "dist/adalight-cosmic-${VERSION}-x86_64"
+          (cd dist && sha256sum "${PKG}.tar.gz" "adalight-cosmic-${VERSION}-x86_64" > SHA256SUMS.txt)
+          ls -lh dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/adalight-cosmic-*-x86_64
+            dist/SHA256SUMS.txt
